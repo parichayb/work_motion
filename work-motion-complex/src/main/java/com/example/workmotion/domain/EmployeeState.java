@@ -1,0 +1,7 @@
+package com.example.workmotion.domain;
+
+public enum EmployeeState {
+
+  ADDED, IN_CHECK, CHECK_START, CHECK_END, APPROVED, ACTIVE, SECURITY_CHECK_STARTED, SECURITY_CHECK_FINISHED, PERMIT_STARTED, PERMIT_FINISHED
+
+}

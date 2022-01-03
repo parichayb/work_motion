@@ -27,7 +27,7 @@ import com.example.workmotion.repository.EmployeeRepository;
 import com.example.workmotion.service.EmployeeService;
 
 @RestController
-@RequestMapping(value = "/medium")
+@RequestMapping(value = "/complex")
 @EnableHypermediaSupport(type = HypermediaType.HAL)
 public class ComplexEmployeeController {
 

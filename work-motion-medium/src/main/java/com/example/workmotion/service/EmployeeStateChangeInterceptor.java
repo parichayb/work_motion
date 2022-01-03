@@ -33,8 +33,8 @@ public class EmployeeStateChangeInterceptor extends StateMachineInterceptorAdapt
     Long.class.cast(message.getHeaders().getOrDefault(HEADER_NAME, 1L));
     
     Optional.ofNullable(message).ifPresent(msg -> {
-      Optional.ofNullable(Long.class.cast(message.getHeaders().getOrDefault(HEADER_NAME, 1L))).ifPresent(EmployeeId -> {
-        Employee employee = employeeRepository.getById(EmployeeId);
+      Optional.ofNullable(Long.class.cast(message.getHeaders().getOrDefault(HEADER_NAME, 1L))).ifPresent(employeeId -> {
+        Employee employee = employeeRepository.getById(employeeId);
         employee.setState(state.getId());
         employeeRepository.save(employee);
       });

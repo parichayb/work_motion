@@ -12,10 +12,4 @@ public interface EmployeeService {
   
   public StateMachine<EmployeeState, EmployeeEvent> transitionForEmployee(Long id, EmployeeEvent event);
 
-  public StateMachine<EmployeeState, EmployeeEvent> checkEmployee(Long id);
-
-  public StateMachine<EmployeeState, EmployeeEvent> approveEmployee(Long id);
-
-  public StateMachine<EmployeeState, EmployeeEvent> activateEmployee(Long id);
-
 }

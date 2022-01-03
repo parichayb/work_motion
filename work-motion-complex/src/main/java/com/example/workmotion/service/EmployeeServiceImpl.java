@@ -1,5 +1,8 @@
 package com.example.workmotion.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.transaction.Transactional;
 
 import org.springframework.messaging.Message;
@@ -7,6 +10,8 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
+import org.springframework.statemachine.persist.DefaultStateMachinePersister;
+import org.springframework.statemachine.persist.StateMachinePersister;
 import org.springframework.statemachine.support.DefaultStateMachineContext;
 import org.springframework.statemachine.support.StateMachineInterceptor;
 import org.springframework.stereotype.Service;
@@ -31,41 +36,31 @@ public class EmployeeServiceImpl implements EmployeeService {
   private final StateMachineFactory<EmployeeState, EmployeeEvent> stateMachineFactory;
 
   private final StateMachineInterceptor<EmployeeState, EmployeeEvent> employeeStateChangeInterceptor;
+  
+  private final InMemoryStateMachinePersist stateMachinePersist;
 
   @Override
   @Transactional
-  public Employee addNewEmployee(Employee employee) {
-    employee.setState(EmployeeState.ADDED);
-    return employeeRepository.save(employee);
+  public Employee addNewEmployee(Employee employee) throws Exception {
+    List<EmployeeState> state = new ArrayList<>();
+    state.add(EmployeeState.ADDED);
+    employee.setState(state);
+    //employee.setState(EmployeeState.ADDED);
+    
+    Employee savedEmployee = employeeRepository.save(employee);
+    StateMachine<EmployeeState, EmployeeEvent> sm = build(savedEmployee.getId());
+    persistSM(sm,savedEmployee.getId());
+    
+    return savedEmployee;
   }
 
   @Override
-  @Transactional
-  public StateMachine<EmployeeState, EmployeeEvent> checkEmployee(Long id) {
-    return updateEmplyeeState(id, EmployeeEvent.CHECK);
-  }
-
-  @Override
-  @Transactional
-  public StateMachine<EmployeeState, EmployeeEvent> approveEmployee(Long id) {
-    return updateEmplyeeState(id, EmployeeEvent.APPROVE);
-
-  }
-
-  @Override
-  @Transactional
-  public StateMachine<EmployeeState, EmployeeEvent> activateEmployee(Long id) {
-    return updateEmplyeeState(id, EmployeeEvent.ACTIVATE);
-
-  }
-
-  @Override
-  public StateMachine<EmployeeState, EmployeeEvent> transitionForEmployee(Long id, EmployeeEvent event) {
+  public StateMachine<EmployeeState, EmployeeEvent> transitionForEmployee(Long id, EmployeeEvent event) throws Exception {
     return updateEmplyeeState(id, event);
   }
 
-  private StateMachine<EmployeeState, EmployeeEvent> updateEmplyeeState(Long id, EmployeeEvent event) {
-    StateMachine<EmployeeState, EmployeeEvent> sm = build(id);
+  private StateMachine<EmployeeState, EmployeeEvent> updateEmplyeeState(Long id, EmployeeEvent event) throws Exception {
+    StateMachine<EmployeeState, EmployeeEvent> sm = fetchSM(id);
     sendEvent(id, sm, event);
     return sm;
   }
@@ -79,19 +74,42 @@ public class EmployeeServiceImpl implements EmployeeService {
     Message<EmployeeEvent> msg = MessageBuilder.withPayload(event).setHeader(HEADER_NAME, id).build();
     sm.sendEvent(msg);
   }
+  
+  private void persistSM(StateMachine<EmployeeState, EmployeeEvent> stateMachine, Long id) throws Exception {
+    //InMemoryStateMachinePersist stateMachinePersist = new InMemoryStateMachinePersist();
+    StateMachinePersister<EmployeeState, EmployeeEvent, String> persister = new DefaultStateMachinePersister<>(stateMachinePersist);
+    
+    persister.persist(stateMachine, Long.toString(id));
+
+  }
+  
+  private StateMachine<EmployeeState, EmployeeEvent> fetchSM(Long employeeId) throws Exception {
+    StateMachine<EmployeeState, EmployeeEvent> sm = stateMachineFactory.getStateMachine(Long.toString(employeeId));
+
+    //InMemoryStateMachinePersist stateMachinePersist = new InMemoryStateMachinePersist();
+    StateMachinePersister<EmployeeState, EmployeeEvent, String> persister = new DefaultStateMachinePersister<>(stateMachinePersist);
+    
+    StateMachine<EmployeeState, EmployeeEvent> restoredSM = persister.restore(sm, Long.toString(employeeId));
+    restoredSM.getStateMachineAccessor().doWithAllRegions(sma -> 
+      sma.addStateMachineInterceptor(employeeStateChangeInterceptor));
+      
+    return restoredSM;
+  }
 
   private StateMachine<EmployeeState, EmployeeEvent> build(Long employeeId) {
     Employee employee = employeeRepository.getById(employeeId);
     StateMachine<EmployeeState, EmployeeEvent> sm = stateMachineFactory.getStateMachine(Long.toString(employeeId));
 
+    
     sm.stop();
 
     sm.getStateMachineAccessor().doWithAllRegions(sma -> {
       sma.addStateMachineInterceptor(employeeStateChangeInterceptor);
-      sma.resetStateMachine(new DefaultStateMachineContext<>(employee.getState(), null, null, null));
+      sma.resetStateMachine(new DefaultStateMachineContext<>(employee.getState().stream().findFirst().get(), null, null, null));
     });
 
     sm.start();
+    
 
     return sm;
   }

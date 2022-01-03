@@ -1,5 +1,10 @@
 package com.example.workmotion.domain;
 
+import java.util.List;
+
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -27,7 +32,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(value=Include.NON_EMPTY, content=Include.NON_NULL) 
+@JsonInclude(value = Include.NON_EMPTY, content = Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Employee extends RepresentationModel<Employee> {
 
@@ -45,9 +50,12 @@ public class Employee extends RepresentationModel<Employee> {
 
   int phone;
 
+  @ElementCollection(targetClass = EmployeeState.class)
   @Enumerated(EnumType.STRING)
-  EmployeeState state;
-  
+  @CollectionTable(name = "emp_state")
+  @Column(name = "state")
+  List<EmployeeState> state;
+
   @Transient
   String transition;
 

@@ -1,13 +1,18 @@
 package com.example.workmotion.service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
+import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.state.State;
+import org.springframework.statemachine.persist.DefaultStateMachinePersister;
+import org.springframework.statemachine.persist.StateMachinePersister;
 import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
-import org.springframework.statemachine.transition.Transition;
 import org.springframework.stereotype.Component;
 
 import com.example.workmotion.domain.Employee;
@@ -24,23 +29,39 @@ public class EmployeeStateChangeInterceptor extends StateMachineInterceptorAdapt
   @Autowired
   EmployeeRepository employeeRepository;
   
+  @Autowired
+  InMemoryStateMachinePersist stateMachinePersist;
+  
   public static final String HEADER_NAME = "employee-id";
   
+  
   @Override
-  public void preStateChange(State<EmployeeState, EmployeeEvent> state, Message<EmployeeEvent> message,
-      Transition<EmployeeState, EmployeeEvent> transition, StateMachine<EmployeeState, EmployeeEvent> stateMachine) {
+  @Transactional
+  public StateContext<EmployeeState, EmployeeEvent> postTransition(
+      StateContext<EmployeeState, EmployeeEvent> stateContext) {
     
-    Long.class.cast(message.getHeaders().getOrDefault(HEADER_NAME, 1L));
+    StateMachine<EmployeeState, EmployeeEvent> stateMachine = stateContext.getStateMachine();
+    List<EmployeeState> states = stateMachine.getState().getIds().stream().collect(Collectors.toList());
+    Message<EmployeeEvent> message = stateContext.getMessage();
     
-    Optional.ofNullable(message).ifPresent(msg -> {
-      Optional.ofNullable(Long.class.cast(message.getHeaders().getOrDefault(HEADER_NAME, 1L))).ifPresent(EmployeeId -> {
-        Employee employee = employeeRepository.getById(EmployeeId);
-        employee.setState(state.getId());
+    Optional.ofNullable(message ).ifPresent(msg -> {
+      Optional.ofNullable(Long.class.cast(message.getHeaders().getOrDefault(HEADER_NAME, 1L))).ifPresent(employeeId -> {
+        Employee employee = employeeRepository.getById(employeeId);
+        employee.setState(states);
         employeeRepository.save(employee);
+        
+        StateMachinePersister<EmployeeState, EmployeeEvent, String> persister = new DefaultStateMachinePersister<>(stateMachinePersist);
+        try {
+          persister.persist(stateMachine, Long.toString(employeeId));
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+        
       });
     });
-    
-    
+    return super.postTransition(stateContext);
   }
+  
+  
 
 }

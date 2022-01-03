@@ -6,12 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Arrays;
 import java.util.UUID;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
-import org.springframework.util.Assert;
 
 import com.example.workmotion.domain.EmployeeEvent;
 import com.example.workmotion.domain.EmployeeState;
@@ -37,13 +37,14 @@ public class StateMachineConfigTest {
 
     stateMachine.sendEvent(EmployeeEvent.CHECK);
 
-    Object[] expectedResult = { EmployeeState.CHECK_START, EmployeeState.SECURITY_CHECK_STARTED, EmployeeState.PERMIT_STARTED };
-    assertTrue(Arrays.equals(expectedResult, stateMachine.getState().getIds().toArray()));
+    assertTrue(CollectionUtils.isEqualCollection(Arrays.asList(EmployeeState.CHECK_START, 
+        EmployeeState.SECURITY_CHECK_STARTED, EmployeeState.PERMIT_STARTED), stateMachine.getState().getIds()));
+
 
     stateMachine.sendEvent(EmployeeEvent.SECURITY_CHECK_DONE);
     
-    expectedResult = new Object[] { EmployeeState.CHECK_START, EmployeeState.SECURITY_CHECK_FINISHED, EmployeeState.PERMIT_STARTED };
-    assertTrue(Arrays.equals(expectedResult, stateMachine.getState().getIds().toArray()));
+    assertTrue(CollectionUtils.isEqualCollection(Arrays.asList(EmployeeState.CHECK_START, 
+        EmployeeState.SECURITY_CHECK_FINISHED, EmployeeState.PERMIT_STARTED), stateMachine.getState().getIds()));
 
     stateMachine.sendEvent(EmployeeEvent.PERMIT_DONE);
 
@@ -70,14 +71,14 @@ public class StateMachineConfigTest {
 
     stateMachine.sendEvent(EmployeeEvent.CHECK);
 
-    Object[] expectedResult = { EmployeeState.CHECK_START, EmployeeState.SECURITY_CHECK_STARTED, EmployeeState.PERMIT_STARTED };
-    assertTrue(Arrays.equals(expectedResult, stateMachine.getState().getIds().toArray()));
+    assertTrue(CollectionUtils.isEqualCollection(Arrays.asList(EmployeeState.CHECK_START, 
+        EmployeeState.SECURITY_CHECK_STARTED, EmployeeState.PERMIT_STARTED), stateMachine.getState().getIds()));
 
     stateMachine.sendEvent(EmployeeEvent.PERMIT_DONE);
     
-    expectedResult = new Object[] { EmployeeState.CHECK_START, EmployeeState.SECURITY_CHECK_STARTED, EmployeeState.PERMIT_FINISHED };
-    assertTrue(Arrays.equals(expectedResult, stateMachine.getState().getIds().toArray()));
-
+    assertTrue(CollectionUtils.isEqualCollection(Arrays.asList(EmployeeState.CHECK_START, 
+        EmployeeState.SECURITY_CHECK_STARTED, EmployeeState.PERMIT_FINISHED), stateMachine.getState().getIds()));
+    
     stateMachine.sendEvent(EmployeeEvent.SECURITY_CHECK_DONE);
 
     assertEquals(EmployeeState.APPROVED, stateMachine.getState().getId());

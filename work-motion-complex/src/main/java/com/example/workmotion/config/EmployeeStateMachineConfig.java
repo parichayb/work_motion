@@ -32,15 +32,19 @@ public class EmployeeStateMachineConfig extends StateMachineConfigurerAdapter<Em
       .end(EmployeeState.ACTIVE)
      .and().withStates()
       .parent(EmployeeState.CHECK_START)
+      //.region("R1")
       .initial(EmployeeState.SECURITY_CHECK_STARTED)
       .end(EmployeeState.SECURITY_CHECK_FINISHED)
      .and().withStates()
+      //.region("R2")
       .parent(EmployeeState.CHECK_START)
       .initial(EmployeeState.PERMIT_STARTED)
       .end(EmployeeState.PERMIT_FINISHED)
       ;
 
   }
+  
+
   
   @Override
   public void configure(StateMachineTransitionConfigurer<EmployeeState, EmployeeEvent> transitions) throws Exception {

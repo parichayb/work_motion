@@ -9,16 +9,10 @@ import com.example.workmotion.domain.EmployeeState;
 
 public interface EmployeeService {
 
-  public Employee addNewEmployee(Employee employee);
+  public Employee addNewEmployee(Employee employee) throws Exception;
   
-  public StateMachine<EmployeeState, EmployeeEvent> transitionForEmployee(Long id, EmployeeEvent event);
+  public StateMachine<EmployeeState, EmployeeEvent> transitionForEmployee(Long id, EmployeeEvent event)  throws Exception;
 
-  public StateMachine<EmployeeState, EmployeeEvent> checkEmployee(Long id);
-
-  public StateMachine<EmployeeState, EmployeeEvent> approveEmployee(Long id);
-
-  public StateMachine<EmployeeState, EmployeeEvent> activateEmployee(Long id);
-  
-  public void approveEmployee(StateContext<EmployeeState, EmployeeEvent> ctx);
+  public void approveEmployee(StateContext<EmployeeState, EmployeeEvent> ctx)  throws Exception;
 
 }

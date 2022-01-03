@@ -37,26 +37,6 @@ public class EmployeeServiceImpl implements EmployeeService {
   }
 
   @Override
-  @Transactional
-  public StateMachine<EmployeeState, EmployeeEvent> checkEmployee(Long id) {
-    return updateEmplyeeState(id, EmployeeEvent.CHECK);
-  }
-
-  @Override
-  @Transactional
-  public StateMachine<EmployeeState, EmployeeEvent> approveEmployee(Long id) {
-    return updateEmplyeeState(id, EmployeeEvent.APPROVE);
-
-  }
-
-  @Override
-  @Transactional
-  public StateMachine<EmployeeState, EmployeeEvent> activateEmployee(Long id) {
-    return updateEmplyeeState(id, EmployeeEvent.ACTIVATE);
-
-  }
-  
-  @Override
   public StateMachine<EmployeeState, EmployeeEvent> transitionForEmployee(Long id, EmployeeEvent event) {
     return updateEmplyeeState(id, event);
   }

@@ -38,14 +38,14 @@ public class ComplexEmployeeController {
 
   
   @PostMapping("/employee")
-  ResponseEntity<Employee> createEmployee(@RequestBody Employee employee) {
+  ResponseEntity<Employee> createEmployee(@RequestBody Employee employee) throws Exception {
     Employee newEmployee = employeeService.addNewEmployee(employee);
     createLinks(newEmployee);
     return new ResponseEntity<Employee>(newEmployee, HttpStatus.OK);
   }
 
   @GetMapping(path = "/employee/{id}")
-  ResponseEntity<Employee> getEmployee(@PathVariable Long id) {
+  ResponseEntity<Employee> getEmployee(@PathVariable Long id) throws Exception {
     Employee savedEmployee = null;
     Optional<Employee> optionalEmp = employeeRepository.findById(id);
     if (optionalEmp.isPresent()) {
@@ -58,7 +58,7 @@ public class ComplexEmployeeController {
   }
 
   @PutMapping(path = "/employee/{id}/transition")
-  ResponseEntity<Employee> updateEmployeeState(@PathVariable Long id, @RequestBody Employee employee) {
+  ResponseEntity<Employee> updateEmployeeState(@PathVariable Long id, @RequestBody Employee employee) throws Exception {
 
     employeeService.transitionForEmployee(id, EmployeeEvent.valueOf(employee.getTransition()));
 
@@ -71,7 +71,7 @@ public class ComplexEmployeeController {
   }
   
   @PutMapping(path = "/employee/{id}/state-transition")
-  ResponseEntity<Employee> updateEmployeeStateTransition(@PathVariable Long id, @RequestBody EmployeeEvent event) {
+  ResponseEntity<Employee> updateEmployeeStateTransition(@PathVariable Long id, @RequestBody EmployeeEvent event) throws Exception {
 
     employeeService.transitionForEmployee(id, event);
 
@@ -84,7 +84,7 @@ public class ComplexEmployeeController {
   }
 
   @PutMapping(path = "/employee/{id}")
-  ResponseEntity<Employee> updateEmployee(@PathVariable Long id, @RequestBody Employee employee) {
+  ResponseEntity<Employee> updateEmployee(@PathVariable Long id, @RequestBody Employee employee) throws Exception {
     Employee savedEmployee = employeeRepository.findById(id).get();
     savedEmployee.setFirstName(employee.getFirstName());
     savedEmployee.setLastName(employee.getLastName());
@@ -98,7 +98,7 @@ public class ComplexEmployeeController {
 
   }
 
-  private void createLinks(Employee savedEmployee) {
+  private void createLinks(Employee savedEmployee) throws Exception {
     Link link = linkTo(methodOn(ComplexEmployeeController.class).getEmployee(savedEmployee.getId())).withSelfRel();
     LinkRelation rel = new LinkRelation() {
       @Override
